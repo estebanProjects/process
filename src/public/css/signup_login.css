@@ -1,0 +1,12 @@
+.container {
+    margin-top: 120px;
+}
+
+.ancla {
+    text-decoration: none;
+    color: white;
+}
+
+.ancla:hover {
+    color: white;
+}
