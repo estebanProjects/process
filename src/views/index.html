@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Productos</title> 
+    <%- include ('partials/head.html')%>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="/css/productosAll.css">
+    <link rel="stylesheet" href="/css/mensajeria.css">
+</head>
+<body>
+
+    <div class="contenedormaster">
+        <button class="btn btn-warning boton_deslogueo"><a style="text-decoration: none;" href="/logout">Desloguearse</a></button>
+        
+        <h1>Bienvenido <span id="spanUsername"><%= usuarioName %></span></h1>
+
+        <div>
+            <form action="/" method="post" class="form-product">
+                <label for="">Nombre del producto</label>
+                <input type="text" name="title" class="input_t" value="libro" id="title">
+        
+                <label for="">Precio</label>
+                <input type="text" name="price" class="input_t" value="150.73" id="price">
+        
+                <label for="">Link de la imagen</label>
+                <input type="text" name="thumbnail" class="input_t" id="thumbnail" value="https://cdn2.iconfinder.com/data/icons/flat-seo-web-ikooni/128/flat_seo2-04-512.png">
+        
+                <input type="submit" value="Enviar" class="input_btn" id="input_button">
+            </form>
+
+            <%- include ('partials/productosplantilla.html')%>
+
+            <section class="mensajeria-espacio">
+                <h3>Centro de Mensajes</h3>
+                <form action="/" class="">
+                    <div class="box-input_correo">
+                        <input type="text" id="input_correo" class="input_correo" value="<%= usuarioName %>" required>
+                    </div>
+                    <hr>
+                    <div class="box_mensajes" id="box_mensajes">
+                            <%if (mensajes.length > 0) { %>
+                            <tbody id="tbody">
+                                <% mensajes.forEach(mensaje => { %>
+                                    <p>
+                                        <strong class="correo"><%= mensaje.name %> </strong><b class="hora">[<%= mensaje.shippingDate %>]</b><i class="mensaje">: <%= mensaje.message %></i>
+                                    </p>
+                                <% }) %>    
+                            <% } else{ %>
+                                <h2>No se encontraron mensajes</h2>
+                            <% } %>
+                            </tbody>
+                    </div>
+                    <div>
+                        <input value="I drink water" type="text" id="input_mensaje" class="input_mensaje" placeholder="Ingresa un mensaje...">
+                        <input type="submit" value="Enviar" id="btn_mensaje" class="btn_mensaje"> 
+                    </div>
+                </form>
+            </section>
+        </div>
+    </div>
+
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/script/app.js"></script>
+</body>
+</html>

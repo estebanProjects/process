@@ -1,0 +1,74 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+html { 
+    overflow-x: hidden;
+}
+
+.contenedormaster {
+    width: 70vw;
+    margin: 0 auto;
+}
+
+h1 {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.boton_deslogueo {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+body {
+    background-color: #18a383;
+    width: 100vw;
+
+    font-size: 20px;
+    font-family: 'Roboto', sans-serif;
+}
+
+.form-product {
+    margin: 20px auto;
+
+    width: 320px;
+    color: #999;
+    display: flex;
+    flex-direction: column;
+    padding: 30px 20px;
+    border-radius: 5px;
+
+    background-color: white;
+}
+
+form label {
+    margin-bottom: 5px;
+}
+
+.input_t {
+    outline: none;
+    padding: 5px;
+    margin-bottom: 16px;
+}
+
+.input_btn {
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+p {
+    text-align: center;
+}
+
+/* a {
+    margin-top: 15px;
+    text-decoration: none;
+} */
+
+/* a:hover {
+    border-bottom: 1px solid black;
+} */

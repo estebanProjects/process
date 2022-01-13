@@ -1,5 +1,7 @@
 const express = require('express')
 
+const knex = require('./db_productos_messages')
+
 const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
 const session = require('express-session')
@@ -32,8 +34,19 @@ const getAllUsers = async() => {
 // static files
 app.use(express.static(path.join(__dirname, 'public')))
 
-app.set('views', __dirname + '/views')
+app.set('views', path.join(__dirname, 'views'))
+app.engine('html', require('ejs').renderFile)
 app.set('view engine', 'ejs')
+
+
+// Server 
+const http = require('http')
+const server = http.createServer(app)
+const port = process.env.PORT || 8080
+// Socket
+const { Server, Socket } = require('socket.io');
+const io = new Server(server)
+
 
 app.use(express.json())
 app.use(express.urlencoded({extended:false}))   
@@ -57,7 +70,6 @@ app.use(passport.session())
 
 // login
 passport.use('local-login', new LocalStrategy(async(username, password, done)=> {
-    console.log("asdads")
     const dataUsers = await getAllUsers()
     let user = dataUsers.find((x) => {
         return x.username === username && x.password === password
@@ -108,19 +120,18 @@ passport.deserializeUser(async(id, done) => {
 })
 
 
-
-// Routes
+// Routes session
 app.get('/all', async(req, res) => {
     const dataUsers = await getAllUsers()
     res.json({users: dataUsers})
 })
 
 app.get('/login', (req, res) => {
-    res.render('login')
+    res.render('login.html')
 })
 
 app.get('/signup', (req, res) => {
-    res.render('signup')
+    res.render('signup.html')
 })
 
 app.get('/home', authoriz, (req, res) => {
@@ -128,28 +139,111 @@ app.get('/home', authoriz, (req, res) => {
 })
 
 app.get('/faillogin', (req, res) => {
-    res.render('login_signup_fail', {prompt: "LOGIN", link: "login"})
+    res.render('login_signup_fail.html', {prompt: "LOGIN", link: "login"})
 })
 
 app.get('/failsignup', (req, res) => {
-    res.render('login_signup_fail', {prompt: "SIGNUP", link: "signup"})
+    res.render('login_signup_fail.html', {prompt: "SIGNUP", link: "signup"})
 })
 
 app.post('/signup', passport.authenticate("local-signup", {
     successRedirect: "/login",
     failureRedirect: "/failsignup"
 })) 
-
-app.post('/login', passport.authenticate("local-login", {
-    successRedirect: "/home",
-    failureRedirect: "/faillogin"
-})) 
+let usuarioName = "Anónimo"
+app.post('/login', passport.authenticate("local-login", {failureRedirect:'/faillogin', failureFlash: true}), 
+    function(req, res) {
+        console.log(req.user.username)
+        usuarioName = req.user.username
+        res.redirect('/')
+    // successRedirect: "/",
+    // failureRedirect: "/faillogin"
+})
 
 app.get('/logout', (req, res) => {
     req.logOut()
     res.redirect('/login')
 })
 
-app.listen(8080, () => {
-    console.log("Server running on port 8080")
+// Routes app
+app.get('/', authoriz, async (req, res) => {
+    let productos = await contendProd.getAll()
+    let mensajes = await contendMensj.getAll()
+
+    console.log(req.body)
+
+    res.render('index.html', {productos, mensajes, usuarioName})
+})
+
+app.post('/', async(req, res) => {
+    req.body.price = Number(req.body.price)
+    await contendProd.save(req.body)
+
+    res.redirect('/');
+})
+
+// Actualizar
+app.put('/update/:id', async(req, res) => {
+    await knex("products")
+        .where({id: req.params.id})
+        .update({title: req.body.title, price: req.body.price, thumbnail: req.body.thumbnail})
+        .then((json) => {
+            res.send({data:json})
+        })
+        .catch((err) => {
+            res.send("Error al actualizar producto")
+        })
+})
+
+// Delete
+app.delete('/delete/:id', async (req, res) => {
+    await knex("products")
+        .where({id: req.params.id})
+        .del()
+        .then((json) => {
+            res.send({data: "Producto eliminado"})
+        })
+        .catch((err) => {
+            res.send("Error al eliminar producto")
+        })
+})
+
+
+// consiguiente
+const ContenedorProductos = require("./contenedor_productos")
+const ContendedorMensajes = require("./contenedor_mensajes")
+
+const contendProd = new ContenedorProductos()
+const contendMensj = new ContendedorMensajes()
+
+// conexion Socket
+io.on("connection", (socket) => {
+    console.log("Client connected")
+
+    // Chat
+    socket.on('dataMensaje', async(data) => {
+        console.log(data)
+        console.log("Hallo, Ich heiße Esteban")
+        let mensajesAll = await contendMensj.getAll()
+        mensajesAll.push(data)
+        await contendMensj.save(data)
+        // console.log(mensajesAll)
+        io.sockets.emit('mensaje_enviado_guardado', mensajesAll)
+    })
+
+    // Productos
+    socket.on("dataProducto", async(data) => {
+        let productos = await contendProd.getAll()
+        productos.push(data)
+        await contendProd.save(data)
+
+        io.sockets.emit('message_back', productos)
+    })
+
+})
+
+
+
+server.listen(port, () => {
+    console.log("Server running on port", port)
 })
