@@ -6,35 +6,17 @@ const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
 const session = require('express-session')
 
+const {fork} = require('child_process')
+
 const path = require('path')
 
 const app = express()
 
-// OBJECT PROCESS
-app.get('/info', (req, res) => {
-    let sistema_Operativo = process.platform
-    let version_Nodejs = process.version
-    let memoria_total_reservada = process.memoryUsage()
-    let path_de_ejecucion = process.execPath
-    let process_id = process.pid
-    let carpeta_del_proyecto = process.cwd()
-
-    const array = [{sistema_Operativo, version_Nodejs, memoria_total_reservada, path_de_ejecucion,process_id,carpeta_del_proyecto}]
-
-    res.send(array)
-})
-
-app.get('/api/randoms', (req, res) => {
-    let a = req.query
-
-    res.send(a)
-})
-
-// <-- 
 
 require('./db_users')
 const User = require('./models/User')
-console.log(User)
+const Valor = require('./models/Valor')
+console.log(User, Valor)
 
 // metodos mongodb ->
 const saveUser = async(usrnm, passwrd) => {
@@ -51,7 +33,50 @@ const getAllUsers = async() => {
     const usrs = await User.find()
     return usrs
 }
+    // metodos para valor
+const saveValor = async(valor) => {
+    let val = new Valor({
+        valor: valor 
+    })
+
+    const valSave = await val.save()
+    return valSave
+}
+
+
 // <-
+
+// OBJECT PROCESS
+app.get('/info', (req, res) => {
+    let sistema_Operativo = process.platform
+    let version_Nodejs = process.version
+    let memoria_total_reservada = process.memoryUsage()
+    let path_de_ejecucion = process.execPath
+    let process_id = process.pid
+    let carpeta_del_proyecto = process.cwd()
+
+    const array = [{sistema_Operativo, version_Nodejs, memoria_total_reservada, path_de_ejecucion,process_id,carpeta_del_proyecto}]
+
+    res.send(array)
+})
+
+
+app.get('/api/randoms', async(req, res) => {
+
+    let cant = req.query
+
+    await saveValor(cant.cant)
+    
+    const comp = fork('./src/calculo.js')
+    comp.send('start')
+
+    comp.on('message', (object) => {
+        res.send(object)
+    }) 
+})
+
+// <-- 
+
 
 // static files
 app.use(express.static(path.join(__dirname, 'public')))
@@ -64,7 +89,7 @@ app.set('view engine', 'ejs')
 // Server 
 const http = require('http')
 const server = http.createServer(app)
-const port = process.env.PORT || 8080
+const port = process.env.PORT || 5020
 // Socket
 const { Server, Socket } = require('socket.io');
 const io = new Server(server)
