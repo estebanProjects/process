@@ -7,12 +7,11 @@ const getValor = async() => {
 }
 
 const calculo = async() => {
-    const cant = await getValor()
+    let cant = await getValor()
 
     let array = []
     let obj = []
-
-    if(!cant) {
+    if(cant == undefined) {
         cant = 100000
     }
 
